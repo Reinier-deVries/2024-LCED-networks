@@ -82,5 +82,4 @@ summary(model)
 # test if the species community composition is different with a permanova
 
 
-
-# this is a good script
+# script shared with Hugo & Wouter
