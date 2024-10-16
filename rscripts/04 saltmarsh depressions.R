@@ -10,6 +10,7 @@ library(tidyverse)
 library(patchwork)
 library(lme4)
 library(lmerTest)
+library(vegan)
 
 # we work with the following database that you made on monday
 # browseURL("https://docs.google.com/spreadsheets/d/1gAhwMWjA6aD3SMHb0j9X_4xYaxsDBNre6B5XyWDgzzI/edit?usp=sharing")
@@ -81,7 +82,32 @@ summary(model)
 # test if the bare soil cover is different
 
 # test if the species community composition is different with a permanova
+# Create a community matrix from the data
+community_matrix <- AllData %>%
+  # Create a unique ID for each observation point
+  mutate(Obs_ID = paste(VegObs_ID, Point, sep = "_")) %>%
+  # Spread the data to create species columns with counts (presence/absence data)
+  count(Obs_ID, PlantSpecies_ID) %>%
+  pivot_wider(names_from = PlantSpecies_ID, values_from = n, values_fill = 0) %>%
+  # Remove the Obs_ID column to get a proper matrix
+  column_to_rownames("Obs_ID")
 
+group <- AllData %>%
+  distinct(VegObs_ID, Point, Group_ID) %>%
+  mutate(Obs_ID = paste(VegObs_ID, Point, sep = "_")) %>%
+  filter(Obs_ID %in% rownames(community_matrix)) %>%
+  pull(Group_ID)
+
+# Calculate Bray-Curtis distance matrix
+distance_matrix <- vegdist(community_matrix, method = "bray")
+
+# Perform PERMANOVA
+permanova_result <- adonis2(distance_matrix ~ group)
+print(permanova_result)
+
+
+AllData %>% 
+  adonis2(formula = PlantSpecies_ID,)
 
 # script shared with Hugo & Wouter
 # dankjewel Reinier
